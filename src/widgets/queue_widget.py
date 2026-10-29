@@ -19,6 +19,7 @@
 
 from gi.repository import Gtk
 
+from ..lib import utils
 from ..widgets.generic_track_widget import HTGenericTrackWidget
 
 
@@ -51,9 +52,10 @@ class HTQueueWidget(Gtk.Box):
             del child
             child = self.played_songs_list.get_row_at_index(0)
 
-        if len(player.played_songs) > 0:
+        played_songs = utils.filter_ai_tracks(player.played_songs)
+        if len(played_songs) > 0:
             self.played_songs_box.set_visible(True)
-            for index, track in enumerate(player.played_songs):
+            for index, track in enumerate(played_songs):
                 listing = HTGenericTrackWidget(track)
                 listing.set_name(str(index))
                 self.played_songs_list.append(listing)
@@ -68,9 +70,10 @@ class HTQueueWidget(Gtk.Box):
             del child
             child = self.queued_songs_list.get_row_at_index(0)
 
-        if len(player.queue) > 0:
+        queued_songs = utils.filter_ai_tracks(player.queue)
+        if len(queued_songs) > 0:
             self.queued_songs_box.set_visible(True)
-            for index, track in enumerate(player.queue):
+            for index, track in enumerate(queued_songs):
                 listing = HTGenericTrackWidget(track)
                 listing.set_name(str(index))
                 self.queued_songs_list.append(listing)
@@ -85,9 +88,10 @@ class HTQueueWidget(Gtk.Box):
             del child
             child = self.next_songs_list.get_row_at_index(0)
 
-        if len(player.tracks_to_play) > 0:
+        next_songs = utils.filter_ai_tracks(player.tracks_to_play)
+        if len(next_songs) > 0:
             self.next_songs_box.set_visible(True)
-            for index, track in enumerate(player.tracks_to_play):
+            for index, track in enumerate(next_songs):
                 listing = HTGenericTrackWidget(track)
                 listing.set_name(str(index))
                 self.next_songs_list.append(listing)

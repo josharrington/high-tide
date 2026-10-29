@@ -33,12 +33,20 @@ class TrackListPage(Page):
     auto_load = None
 
     def _setup_ui(
-        self, builder, title, subtitle, tracks, reload_function=None, hide_share=False
+        self,
+        builder,
+        title,
+        subtitle,
+        tracks,
+        reload_function=None,
+        hide_share=False,
+        context=None,
     ):
         self.append(builder.get_object("_main"))
 
         self.auto_load = builder.get_object("_auto_load")
         self.auto_load.set_scrolled_window(self.scrolled_window)
+        self.auto_load.set_context(context)
         self.auto_load.set_items(tracks)
         if reload_function:
             self.auto_load.set_function(reload_function)

@@ -42,6 +42,7 @@ from tidalapi.media import Track
 from tidalapi.types import ItemOrder, OrderDirection
 
 from ..pages import HTAlbumPage, HTArtistPage, HTMixPage, HTPlaylistPage
+from . import ai
 from .cache import HTCache
 
 logger = logging.getLogger(__name__)
@@ -84,6 +85,26 @@ def init() -> None:
     global cache
     session = None
     cache = HTCache(session)
+
+    ai.install()
+
+
+def is_ai_item(item: Any) -> bool:
+    """Return whether a TIDAL item is labelled as AI-generated."""
+    return ai.is_ai(item)
+
+
+def filter_ai_tracks(tracks: List[Any], context: str | None = None) -> List[Any]:
+    """Remove AI-generated tracks according to the user's preference.
+
+    Args:
+        tracks: Track objects to filter.
+        context: ``"playlist"`` when the tracks belong to a playlist.
+
+    Returns:
+        list: The tracks that should be displayed or played.
+    """
+    return ai.filter_tracks(tracks, context)
 
 
 def get_alsa_devices() -> List[dict]:

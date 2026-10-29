@@ -37,5 +37,7 @@ class HTCollectionPage(Page):
         self.new_carousel_for(_("My Mixes and Radios"), utils.favourite_mixes)
         self.new_carousel_for(_("Playlists"), utils.playlist_and_favorite_playlists)
         self.new_carousel_for(_("Albums"), utils.favourite_albums)
-        self.new_carousel_for(_("Tracks"), utils.favourite_tracks)
+        self.new_carousel_for(
+            _("Tracks"), utils.filter_ai_tracks(utils.favourite_tracks)
+        )
         self.new_carousel_for(_("Artists"), utils.favourite_artists)

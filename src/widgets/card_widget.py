@@ -49,6 +49,7 @@ class HTCardWidget(Adw.BreakpointBin, IDisconnectable):
     image = Gtk.Template.Child()
     click_gesture = Gtk.Template.Child()
     title_label = Gtk.Template.Child()
+    ai_label = Gtk.Template.Child()
     detail_label = Gtk.Template.Child()
 
     track_artist_label = Gtk.Template.Child()
@@ -83,6 +84,8 @@ class HTCardWidget(Adw.BreakpointBin, IDisconnectable):
         self._populate()
 
     def _populate(self):
+        self.ai_label.set_visible(utils.is_ai_item(self.item))
+
         if isinstance(self.item, MixV2) or isinstance(self.item, Mix):
             self._make_mix_card()
             self.action = "win.push-mix-page"

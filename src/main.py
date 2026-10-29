@@ -23,7 +23,7 @@ from typing import Any, Callable, List
 
 from gi.repository import Adw, Gio, Gtk
 
-from .lib import utils
+from .lib import ai, utils
 from .lib.player_object import AudioSink
 from .window import HighTideWindow
 
@@ -167,6 +167,15 @@ class HighTideApplication(Adw.Application):
                 "notify::active", self.on_discord_rpc_changed
             )
 
+            ai_mode = self.settings.get_string("ai-content")
+            ai_row = builder.get_object("_ai_content_row")
+            ai_row.set_selected(
+                ai.AI_MODES.index(ai_mode)
+                if ai_mode in ai.AI_MODES
+                else ai.AI_MODES.index(ai.DEFAULT_AI_MODE)
+            )
+            ai_row.connect("notify::selected", self.on_ai_content_changed)
+
             self.alsa_row = builder.get_object("_alsa_device_row")
 
             # Create a new label factory to just set max_width
@@ -240,6 +249,9 @@ class HighTideApplication(Adw.Application):
 
     def on_discord_rpc_changed(self, widget: Any, *args) -> None:
         self.win.change_discord_rpc_enabled(widget.get_active())
+
+    def on_ai_content_changed(self, widget: Any, *args) -> None:
+        self.win.set_ai_content_mode(ai.AI_MODES[widget.get_selected()])
 
     def deactive_alsa_device_row(self, widget: Any, *args) -> None:
         alsa_used = widget.get_selected() == AudioSink.ALSA

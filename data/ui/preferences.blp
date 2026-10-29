@@ -42,6 +42,21 @@ Adw.PreferencesDialog _preference_window {
     }
 
     Adw.PreferencesGroup {
+      title: _("Content");
+      Adw.ComboRow _ai_content_row {
+        model: StringList {
+          strings [
+            _("Show"),
+            _("Hide in playlists"),
+            _("Remove entirely"),
+          ]
+        };
+        title: _("AI-generated music");
+        subtitle: _("TIDAL labels fully AI-generated recordings. Hiding in playlists keeps them visible elsewhere, while removing entirely also skips them during playback. TIDAL does not expose its own AI preference through the API, so this setting is stored locally.");
+      }
+    }
+
+    Adw.PreferencesGroup {
       title: _("App");
       Adw.SwitchRow _background_row {
         title: _("Run in the background");

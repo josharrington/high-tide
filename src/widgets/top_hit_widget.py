@@ -40,6 +40,7 @@ class HTTopHitWidget(Gtk.Box, IDisconnectable):
 
     image = Gtk.Template.Child()
     primary_label = Gtk.Template.Child()
+    ai_label = Gtk.Template.Child()
     secondary_label = Gtk.Template.Child()
     play_button = Gtk.Template.Child()
     shuffle_button = Gtk.Template.Child()
@@ -58,6 +59,7 @@ class HTTopHitWidget(Gtk.Box, IDisconnectable):
         )
 
         self.item = _item
+        self.ai_label.set_visible(utils.is_ai_item(_item))
 
         self.action = None
 
