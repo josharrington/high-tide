@@ -31,7 +31,7 @@ from tidalapi.media import Track
 from tidalapi.page import PageItem
 
 from ..disconnectable_iface import IDisconnectable
-from ..lib import utils
+from ..lib import ai, utils
 
 
 @Gtk.Template(resource_path="/io/github/nokse22/high-tide/ui/widgets/card_widget.ui")
@@ -76,6 +76,12 @@ class HTCardWidget(Adw.BreakpointBin, IDisconnectable):
                 self.click_gesture.connect("released", self._on_click),
             )
         )
+        self.signals.append(
+            (
+                ai.settings,
+                ai.settings.connect("labels-changed", self._update_ai_label),
+            )
+        )
 
         self.item: Union[Track, Album, Artist, Playlist, Mix, MixV2] = item
 
@@ -83,8 +89,11 @@ class HTCardWidget(Adw.BreakpointBin, IDisconnectable):
 
         self._populate()
 
+    def _update_ai_label(self, *args):
+        self.ai_label.set_visible(utils.should_show_ai_label(self.item))
+
     def _populate(self):
-        self.ai_label.set_visible(utils.is_ai_item(self.item))
+        self._update_ai_label()
 
         if isinstance(self.item, MixV2) or isinstance(self.item, Mix):
             self._make_mix_card()

@@ -31,12 +31,24 @@ kept locally too.
 
 import logging
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, ClassVar
 
+from gi.repository import GObject
 from tidalapi.album import Album
 from tidalapi.media import Media
 
 logger = logging.getLogger(__name__)
+
+
+class _AISettings(GObject.GObject):
+    """Notifies widgets when the AI label visibility changes."""
+
+    __gsignals__: ClassVar[dict] = {
+        "labels-changed": (GObject.SignalFlags.RUN_FIRST, None, ()),
+    }
+
+
+settings = _AISettings()
 
 AI_MODE_SHOW = "show"
 AI_MODE_HIDE_IN_PLAYLISTS = "hide-in-playlists"
@@ -48,6 +60,7 @@ AI_MODES = (AI_MODE_SHOW, AI_MODE_HIDE_IN_PLAYLISTS, AI_MODE_REMOVE)
 DEFAULT_AI_MODE = AI_MODE_HIDE_IN_PLAYLISTS
 
 _mode = DEFAULT_AI_MODE
+_show_labels = True
 _installed = False
 
 
@@ -95,6 +108,23 @@ def set_mode(mode: str) -> None:
         logger.warning("Unknown AI content mode %r, using default", mode)
         mode = DEFAULT_AI_MODE
     _mode = mode
+
+
+def get_show_labels() -> bool:
+    """Return whether AI badges should be displayed."""
+
+    return _show_labels
+
+
+def set_show_labels(show: bool) -> None:
+    """Show or hide AI badges, notifying any visible widgets."""
+
+    global _show_labels
+    show = bool(show)
+    if _show_labels == show:
+        return
+    _show_labels = show
+    settings.emit("labels-changed")
 
 
 def is_ai(item: Any) -> bool:

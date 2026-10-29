@@ -89,9 +89,9 @@ def init() -> None:
     ai.install()
 
 
-def is_ai_item(item: Any) -> bool:
-    """Return whether a TIDAL item is labelled as AI-generated."""
-    return ai.is_ai(item)
+def should_show_ai_label(item: Any) -> bool:
+    """Return whether the AI badge should be visible for a TIDAL item."""
+    return ai.get_show_labels() and ai.is_ai(item)
 
 
 def filter_ai_tracks(tracks: List[Any], context: str | None = None) -> List[Any]:

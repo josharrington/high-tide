@@ -176,6 +176,20 @@ class HighTideApplication(Adw.Application):
             )
             ai_row.connect("notify::selected", self.on_ai_content_changed)
 
+            show_ai_labels_check = builder.get_object("_show_ai_labels_check")
+            show_ai_labels_check.set_active(
+                self.settings.get_boolean("show-ai-labels")
+            )
+            show_ai_labels_check.connect(
+                "toggled", self.on_show_ai_labels_toggled
+            )
+            builder.get_object("_show_ai_labels_row").connect(
+                "activated",
+                lambda *_: show_ai_labels_check.set_active(
+                    not show_ai_labels_check.get_active()
+                ),
+            )
+
             self.alsa_row = builder.get_object("_alsa_device_row")
 
             # Create a new label factory to just set max_width
@@ -252,6 +266,9 @@ class HighTideApplication(Adw.Application):
 
     def on_ai_content_changed(self, widget: Any, *args) -> None:
         self.win.set_ai_content_mode(ai.AI_MODES[widget.get_selected()])
+
+    def on_show_ai_labels_toggled(self, widget: Any, *args) -> None:
+        self.win.set_show_ai_labels(widget.get_active())
 
     def deactive_alsa_device_row(self, widget: Any, *args) -> None:
         alsa_used = widget.get_selected() == AudioSink.ALSA

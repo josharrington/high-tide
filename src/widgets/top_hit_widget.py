@@ -29,7 +29,7 @@ from tidalapi.playlist import Playlist
 from tidalapi.media import Track
 
 from ..disconnectable_iface import IDisconnectable
-from ..lib import utils
+from ..lib import ai, utils
 
 
 @Gtk.Template(resource_path="/io/github/nokse22/high-tide/ui/widgets/top_hit_widget.ui")
@@ -59,7 +59,13 @@ class HTTopHitWidget(Gtk.Box, IDisconnectable):
         )
 
         self.item = _item
-        self.ai_label.set_visible(utils.is_ai_item(_item))
+        self._update_ai_label()
+        self.signals.append(
+            (
+                ai.settings,
+                ai.settings.connect("labels-changed", self._update_ai_label),
+            )
+        )
 
         self.action = None
 
@@ -84,6 +90,9 @@ class HTTopHitWidget(Gtk.Box, IDisconnectable):
                 self.click_gesture.connect("released", self._on_click),
             )
         )
+
+    def _update_ai_label(self, *args) -> None:
+        self.ai_label.set_visible(utils.should_show_ai_label(self.item))
 
     def _on_click(self, *args) -> None:
         if self.action:

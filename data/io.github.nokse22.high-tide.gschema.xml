@@ -55,6 +55,9 @@
       </choices>
       <default>'hide-in-playlists'</default>
     </key>
+	  <key name="show-ai-labels" type="b">
+      <default>true</default>
+    </key>
 	  <key name="alsa-device" type="s">
       <default>'default'</default>
     </key>

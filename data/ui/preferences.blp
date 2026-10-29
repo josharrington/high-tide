@@ -54,6 +54,16 @@ Adw.PreferencesDialog _preference_window {
         title: _("AI-generated music");
         subtitle: _("TIDAL labels fully AI-generated recordings. Hiding in playlists keeps them visible elsewhere, while removing entirely also skips them during playback. TIDAL does not expose its own AI preference through the API, so this setting is stored locally.");
       }
+      Adw.ActionRow _show_ai_labels_row {
+        title: _("Show AI labels");
+        subtitle: _("Display the AI badge next to AI-generated tracks and albums.");
+        activatable: true;
+
+        [suffix]
+        CheckButton _show_ai_labels_check {
+          valign: center;
+        }
+      }
     }
 
     Adw.PreferencesGroup {
