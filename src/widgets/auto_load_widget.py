@@ -55,6 +55,10 @@ class HTAutoLoadWidget(Gtk.Box, IDisconnectable):
 
         self.items_limit = 50
         self.items_n = 0
+        # Offset used for the next API request. It counts every fetched item,
+        # including AI tracks that may have been filtered out.
+        self.offset = 0
+        self.context = None
 
         self.handler_id = None
         self.scrolled_window = None
@@ -63,6 +67,7 @@ class HTAutoLoadWidget(Gtk.Box, IDisconnectable):
         """Reset the widget so it can be reused with new data"""
         self.items = []
         self.items_n = 0
+        self.offset = 0
         self.type = None
         self.is_loading = False
 
@@ -82,6 +87,14 @@ class HTAutoLoadWidget(Gtk.Box, IDisconnectable):
         """
         self.function = function
 
+    def set_context(self, context: str | None) -> None:
+        """Set the context used for AI content filtering.
+
+        Args:
+            context: ``"playlist"`` for playlist tracks, otherwise ``None``.
+        """
+        self.context = context
+
     def set_items(self, items: list) -> None:
         """
         Call once to set the initial items to display. Subsequent calls are supported.
@@ -94,7 +107,12 @@ class HTAutoLoadWidget(Gtk.Box, IDisconnectable):
         if not items:
             return
 
-        self.items = list(items)
+        raw_items = list(items)
+        self.offset = len(raw_items)
+        self.items = utils.filter_ai_tracks(raw_items, self.context)
+
+        if not self.items:
+            return
 
         self.type = utils.get_type(self.items[0])
 
@@ -128,16 +146,26 @@ class HTAutoLoadWidget(Gtk.Box, IDisconnectable):
         self.is_loading = True
         self.spinner.set_visible(True)
         try:
-            new_items = self.function(limit=self.items_limit, offset=self.items_n)
+            raw_items = self.function(limit=self.items_limit, offset=self.offset)
         except TypeError:
-            new_items = []
+            raw_items = []
+
+        self.offset += len(raw_items)
+        new_items = utils.filter_ai_tracks(raw_items, self.context)
         self.items.extend(new_items)
-        if new_items == []:
+
+        if raw_items == []:
             GObject.signal_handler_disconnect(self.scrolled_window, self.handler_id)
             self.spinner.set_visible(False)
             self.is_loading = False
             return
-        elif self.type is None:
+
+        if new_items == []:
+            self.spinner.set_visible(False)
+            self.is_loading = False
+            return
+
+        if self.type is None:
             self.type = utils.get_type(new_items[0])
 
         def _add():

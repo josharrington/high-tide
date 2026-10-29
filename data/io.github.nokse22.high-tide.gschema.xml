@@ -47,6 +47,17 @@
 	  <key name="discord-rpc" type="b">
       <default>true</default>
     </key>
+	  <key name="ai-content" type="s">
+      <choices>
+        <choice value='show'/>
+        <choice value='hide-in-playlists'/>
+        <choice value='remove'/>
+      </choices>
+      <default>'hide-in-playlists'</default>
+    </key>
+	  <key name="show-ai-labels" type="b">
+      <default>true</default>
+    </key>
 	  <key name="alsa-device" type="s">
       <default>'default'</default>
     </key>

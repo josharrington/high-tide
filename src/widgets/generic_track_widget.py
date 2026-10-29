@@ -25,7 +25,7 @@ from gi.repository import Gio, GLib, GObject, Gtk
 from tidalapi.playlist import UserPlaylist
 
 from ..disconnectable_iface import IDisconnectable
-from ..lib import utils
+from ..lib import ai, utils
 
 import logging
 
@@ -53,6 +53,7 @@ class HTGenericTrackWidget(Gtk.ListBoxRow, IDisconnectable):
     playlists_submenu = Gtk.Template.Child()
     _grid = Gtk.Template.Child()
     explicit_label = Gtk.Template.Child()
+    ai_label = Gtk.Template.Child()
 
     artist_label = Gtk.Template.Child()
     artist_label_2 = Gtk.Template.Child()
@@ -105,6 +106,13 @@ class HTGenericTrackWidget(Gtk.ListBoxRow, IDisconnectable):
         self.artist_label.set_artists(self.track.artists)
 
         self.explicit_label.set_visible(self.track.explicit)
+        self._update_ai_label()
+        self.signals.append(
+            (
+                ai.settings,
+                ai.settings.connect("labels-changed", self._update_ai_label),
+            )
+        )
 
         self.track_duration_label.set_label(utils.pretty_duration(self.track.duration))
 
@@ -130,6 +138,9 @@ class HTGenericTrackWidget(Gtk.ListBoxRow, IDisconnectable):
 
         self.action_group = Gio.SimpleActionGroup()
         self.insert_action_group("trackwidget", self.action_group)
+
+    def _update_ai_label(self, *args):
+        self.ai_label.set_visible(utils.should_show_ai_label(self.track))
 
     def _on_player_song_changed(self, *args):
         self._update_now_playing()

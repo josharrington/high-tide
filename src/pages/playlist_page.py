@@ -59,4 +59,5 @@ class HTPlaylistPage(TrackListPage):
             subtitle,
             self.tracks,
             reload_function=self.item.tracks,
+            context="playlist",
         )

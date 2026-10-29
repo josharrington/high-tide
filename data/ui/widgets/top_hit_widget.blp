@@ -64,6 +64,18 @@ template $HTTopHitWidget: Box {
             xalign: 0.0;
           }
 
+          Label ai_label {
+            label: "AI";
+
+            styles [
+              "ai-label",
+            ]
+
+            visible: false;
+            halign: start;
+            tooltip-text: _("AI-generated");
+          }
+
           Label secondary_label {
             vexpand: true;
             xalign: 0.0;

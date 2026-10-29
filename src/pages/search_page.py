@@ -49,9 +49,13 @@ class HTSearchPage(Page):
         )
 
     def _load_finish(self) -> None:
-        self.append(HTTopHitWidget(self.results["top_hit"]))
+        top_hit = self.results.get("top_hit")
+        if top_hit is not None and utils.filter_ai_tracks([top_hit]):
+            self.append(HTTopHitWidget(top_hit))
 
         self.new_carousel_for(_("Artists"), self.results["artists"])
         self.new_carousel_for(_("Albums"), self.results["albums"])
         self.new_carousel_for(_("Playlists"), self.results["playlists"])
-        self.new_carousel_for(_("Tracks"), self.results["tracks"])
+        self.new_carousel_for(
+            _("Tracks"), utils.filter_ai_tracks(self.results["tracks"])
+        )

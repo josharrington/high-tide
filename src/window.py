@@ -25,7 +25,7 @@ import tidalapi
 from gi.repository import Adw, Gio, GLib, GObject, Gst, Gtk, Xdp, Gdk
 from tidalapi.media import Quality
 
-from .lib import HTCache, PlayerObject, RepeatType, SecretStore, utils
+from .lib import HTCache, PlayerObject, RepeatType, SecretStore, ai, utils
 from .login import LoginDialog
 from .mpris import MPRIS
 from .pages import (HTAlbumPage, HTArtistPage, HTCollectionPage, HTExplorePage,
@@ -64,6 +64,8 @@ class HighTideWindow(Adw.ApplicationWindow):
     volume_button = Gtk.Template.Child()
     in_my_collection_button = Gtk.Template.Child()
     explicit_label = Gtk.Template.Child()
+    ai_label = Gtk.Template.Child()
+    miniplayer_ai_label = Gtk.Template.Child()
     queue_widget = Gtk.Template.Child()
     lyrics_widget = Gtk.Template.Child()
     repeat_button = Gtk.Template.Child()
@@ -89,6 +91,14 @@ class HighTideWindow(Adw.ApplicationWindow):
         super().__init__(**kwargs)
 
         self.settings = Gio.Settings.new("io.github.nokse22.high-tide")
+
+        ai.set_mode(self.settings.get_string("ai-content"))
+        ai.set_show_labels(self.settings.get_boolean("show-ai-labels"))
+        self.settings.connect("changed::ai-content", self.on_ai_content_setting_changed)
+        self.settings.connect(
+            "changed::show-ai-labels", self.on_show_ai_labels_setting_changed
+        )
+        ai.settings.connect("labels-changed", self.on_ai_labels_changed)
 
         self.settings.bind(
             "window-width", self, "default-width", Gio.SettingsBindFlags.DEFAULT
@@ -347,6 +357,9 @@ class HighTideWindow(Adw.ApplicationWindow):
         self.song_title_label.set_tooltip_text(track_name)
         self.artist_label.set_artists(track.artists)
         self.explicit_label.set_visible(track.explicit)
+        is_ai = utils.should_show_ai_label(track)
+        self.ai_label.set_visible(is_ai)
+        self.miniplayer_ai_label.set_visible(is_ai)
 
         self.set_quality_label()
 
@@ -753,6 +766,30 @@ class HighTideWindow(Adw.ApplicationWindow):
         if self.settings.get_boolean("discord-rpc") != state:
             self.settings.set_boolean("discord-rpc", state)
             self.player_object.set_discord_rpc(state)
+
+    def on_ai_content_setting_changed(self, settings, key):
+        ai.set_mode(settings.get_string(key))
+
+    def on_show_ai_labels_setting_changed(self, settings, key):
+        ai.set_show_labels(settings.get_boolean(key))
+
+    def on_ai_labels_changed(self, *args):
+        track = self.player_object.playing_track
+        show_label = track is not None and utils.should_show_ai_label(track)
+        self.ai_label.set_visible(show_label)
+        self.miniplayer_ai_label.set_visible(show_label)
+
+    def set_ai_content_mode(self, mode: str):
+        if self.settings.get_string("ai-content") != mode:
+            self.settings.set_string("ai-content", mode)
+            utils.send_toast(
+                _("AI content preference updated. Reload the page to update it."),
+                3,
+            )
+
+    def set_show_ai_labels(self, show: bool):
+        if self.settings.get_boolean("show-ai-labels") != show:
+            self.settings.set_boolean("show-ai-labels", show)
 
     #
     #   PAGES ACTIONS CALLBACKS

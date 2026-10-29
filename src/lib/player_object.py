@@ -34,7 +34,7 @@ from tidalapi.mix import Mix
 from tidalapi.playlist import Playlist
 from tidalapi.media import Track, ManifestMimeType
 
-from . import discord_rpc, utils
+from . import ai, discord_rpc, utils
 
 logger = logging.getLogger(__name__)
 
@@ -411,6 +411,9 @@ class PlayerObject(GObject.GObject):
         elif isinstance(thing, Track):
             tracks_list = [thing]
 
+        context = "playlist" if isinstance(thing, Playlist) else None
+        tracks_list = ai.filter_tracks(tracks_list, context)
+
         self.id_list = [track.id for track in tracks_list]
 
         return tracks_list
@@ -450,6 +453,12 @@ class PlayerObject(GObject.GObject):
             track: The Track object to play
             gapless: Whether to enqueue the track for gapless playback
         """
+        if not ai.is_track_allowed(track):
+            utils.send_toast(
+                _("This track is AI-generated and hidden by your settings"), 3
+            )
+            return
+
         threading.Thread(target=self._play_track_thread, args=(track, gapless)).start()
 
     def _play_track_thread(self, track: Track, gapless=False) -> None:
@@ -650,11 +659,13 @@ class PlayerObject(GObject.GObject):
 
         # A track is already enqueued from an about-to-finish
         if self.next_track:
-            logger.info("Using already enqueued track from gapless")
-            track = self.next_track
+            if ai.is_track_allowed(self.next_track):
+                logger.info("Using already enqueued track from gapless")
+                track = self.next_track
+                self.next_track = None
+                self.play_track(track, gapless=gapless)
+                return
             self.next_track = None
-            self.play_track(track, gapless=gapless)
-            return
 
         if self._repeat_type == RepeatType.SONG and not gapless:
             self.seek(0)
@@ -667,10 +678,11 @@ class PlayerObject(GObject.GObject):
         if self.playing_track:
             self.played_songs.append(self.playing_track)
 
-        if self.queue:
+        while self.queue:
             track = self.queue.pop(0)
-            self.play_track(track, gapless=gapless)
-            return
+            if ai.is_track_allowed(track):
+                self.play_track(track, gapless=gapless)
+                return
 
         if not self._tracks_to_play and self._repeat_type == RepeatType.LIST:
             self._tracks_to_play = self.played_songs
@@ -687,9 +699,13 @@ class PlayerObject(GObject.GObject):
         else:
             track_list = self._tracks_to_play
 
-        if track_list and len(track_list) > 0:
+        while track_list and len(track_list) > 0:
             track = track_list.pop(0)
-            self.play_track(track, gapless=gapless)
+            if ai.is_track_allowed(track):
+                self.play_track(track, gapless=gapless)
+                return
+
+        self.pause()
 
     def play_previous(self):
         """Play the previous track or restart current track if near beginning."""
@@ -731,6 +747,12 @@ class PlayerObject(GObject.GObject):
         Args:
             track: The Track object to add to the queue
         """
+        if not ai.is_track_allowed(track):
+            utils.send_toast(
+                _("This track is AI-generated and hidden by your settings"), 3
+            )
+            return
+
         self.queue.append(track)
         self.emit("song-added-to-queue")
 
@@ -740,6 +762,12 @@ class PlayerObject(GObject.GObject):
         Args:
             track: The Track object to play next
         """
+        if not ai.is_track_allowed(track):
+            utils.send_toast(
+                _("This track is AI-generated and hidden by your settings"), 3
+            )
+            return
+
         self.queue.insert(0, track)
         self.emit("song-added-to-queue")
 
